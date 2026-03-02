@@ -292,10 +292,15 @@ async def fetch_prices(symbols: List[str]) -> dict:
     ids = ",".join(s.lower() for s in symbols)
     url = f"{COINGECKO_BASE}/simple/price"
     params = {"ids": ids, "vs_currencies": "usd"}
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+    except Exception:
+        # On any pricing API error (429 rate limit, network, etc.), fall back to zero prices
+        return {}
+
     return {k.upper(): v.get("usd", 0.0) for k, v in data.items()}
 
 
