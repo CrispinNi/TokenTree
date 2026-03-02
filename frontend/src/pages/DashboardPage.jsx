@@ -6,9 +6,13 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState({ total_usd_value: 0, per_token: [] });
   const [chartData, setChartData] = useState([]);
   const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const [summaryRes, chartRes, newsRes] = await Promise.all([
           api.get("/summary"),
@@ -20,10 +24,37 @@ export default function DashboardPage() {
         setNews(newsRes.data || []);
       } catch (err) {
         console.error(err);
+        setError(err.response?.status === 401 ? "Session expired. Please log in again." : "Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     load();
   }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
+          <p className="text-red-500">{error}</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
