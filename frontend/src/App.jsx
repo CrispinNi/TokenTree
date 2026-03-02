@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import AddCryptoPage from "./pages/AddCryptoPage";
 import { isAuthenticated } from "./utils/auth";
@@ -17,8 +18,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/add-crypto" element={<AddCryptoPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} />} />
+        <Route path="/add-crypto" element={<ProtectedRoute element={<AddCryptoPage />} />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

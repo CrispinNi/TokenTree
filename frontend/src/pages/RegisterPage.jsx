@@ -1,30 +1,22 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { login } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const form = new FormData();
-      form.append("username", email);
-      form.append("password", password);
-
-      const response = await api.post("/auth/login", form, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
-
-      login(response.data.access_token);
-      navigate("/dashboard");
+      await api.post("/auth/register", { name, email, password });
+      alert("Registration successful. You can now log in.");
+      navigate("/login");
     } catch (err) {
       console.error(err);
-      alert("Login failed. Check your credentials.");
+      alert("Registration failed. Try a different email.");
     }
   };
 
@@ -34,7 +26,15 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded shadow-md w-80"
       >
-        <h2 className="text-2xl mb-4">Login</h2>
+        <h2 className="text-2xl mb-4">Register</h2>
+        <input
+          type="text"
+          placeholder="Name"
+          className="w-full mb-3 p-2 border rounded"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <input
           type="email"
           placeholder="Email"
@@ -51,16 +51,18 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button className="w-full bg-blue-500 text-white p-2 rounded mb-2">
-          Login
+        <button className="w-full bg-green-500 text-white p-2 rounded mb-2">
+          Register
         </button>
-        <div className="text-sm text-center">
-          <span className="text-gray-600 mr-1">New here?</span>
-          <Link to="/register" className="text-blue-600 underline">
-            Create an account
-          </Link>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/login")}
+          className="w-full text-blue-600 text-sm underline"
+        >
+          Already have an account? Login
+        </button>
       </form>
     </div>
   );
 }
+
