@@ -72,10 +72,11 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="max-w-[1400px] mx-auto px-8 py-8 space-y-16">
           {/* Header */}
-          <div className="mb-12 pb-8 border-b border-slate-700/50">
+          <div className="pb-6 border-b border-slate-700/50">
             <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
             <p className="text-slate-400">
               Track and manage your crypto portfolio in real-time
@@ -83,8 +84,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 pb-8">
-            {/* Total USD Value */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Total Portfolio Value */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-blue-500/50 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div>
@@ -99,7 +100,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Tokens Count */}
+            {/* Assets */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-purple-500/50 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div>
@@ -114,7 +115,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Chart Data Available */}
+            {/* Data Points */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-green-500/50 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div>
@@ -132,10 +133,11 @@ export default function DashboardPage() {
 
           {/* Tokens Section */}
           {summary.per_token.length > 0 && (
-            <div className="mb-16 pb-8 border-b border-slate-700/50">
+            <div>
               <h2 className="text-2xl font-bold text-white mb-6">
                 Your Holdings
               </h2>
+
               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -155,27 +157,27 @@ export default function DashboardPage() {
                         </th>
                       </tr>
                     </thead>
+
                     <tbody className="divide-y divide-slate-700">
                       {summary.per_token.map((t) => (
                         <tr
                           key={t.id}
-                          className="hover:bg-slate-800/50 transition-colors duration-200"
+                          className="hover:bg-slate-800/50 transition-colors"
                         >
-                          <td className="px-6 py-4">
-                            <span className="text-white font-semibold">
-                              {t.symbol}
-                            </span>
+                          <td className="px-6 py-4 text-white font-semibold">
+                            {t.symbol}
                           </td>
+
                           <td className="px-6 py-4 text-right text-slate-300">
                             {t.quantity.toFixed(8)}
                           </td>
+
                           <td className="px-6 py-4 text-right text-slate-400">
                             ${t.price_usd.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-blue-400 font-semibold">
-                              ${t.value_usd.toFixed(2)}
-                            </span>
+
+                          <td className="px-6 py-4 text-right text-blue-400 font-semibold">
+                            ${t.value_usd.toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -186,11 +188,13 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Empty Portfolio */}
           {summary.per_token.length === 0 && (
-            <div className="mb-16 pb-8 border-b border-slate-700/50 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl p-8 text-center">
+            <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl p-10 text-center border border-slate-700">
               <p className="text-slate-300 text-lg mb-4">
                 No tokens yet. Start building your portfolio!
               </p>
+
               <a
                 href="/add-crypto"
                 className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-500/50"
@@ -200,13 +204,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Trending News Section */}
+          {/* Trending News */}
           <div>
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700/50">
               <div>
                 <h2 className="text-2xl font-bold text-white">
                   📰 Trending News
                 </h2>
+
                 <p className="text-slate-400 text-sm mt-1">
                   Latest cryptocurrency updates and market trends
                 </p>
@@ -214,7 +219,7 @@ export default function DashboardPage() {
             </div>
 
             {news.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {news.map((item) => (
                   <NewsCard key={item.url} item={item} />
                 ))}
