@@ -72,10 +72,10 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-12 pb-8 border-b border-slate-700/50">
             <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
             <p className="text-slate-400">
               Track and manage your crypto portfolio in real-time
@@ -83,7 +83,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 pb-8">
             {/* Total USD Value */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-blue-500/50 transition-all duration-300">
               <div className="flex items-start justify-between">
@@ -132,8 +132,8 @@ export default function DashboardPage() {
 
           {/* Tokens Section */}
           {summary.per_token.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-white mb-4">
+            <div className="mb-16 pb-8 border-b border-slate-700/50">
+              <h2 className="text-2xl font-bold text-white mb-6">
                 Your Holdings
               </h2>
               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700">
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           )}
 
           {summary.per_token.length === 0 && (
-            <div className="mb-12 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl p-8 border border-blue-700/30 text-center">
+            <div className="mb-16 pb-8 border-b border-slate-700/50 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl p-8 text-center">
               <p className="text-slate-300 text-lg mb-4">
                 No tokens yet. Start building your portfolio!
               </p>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
 
           {/* Trending News Section */}
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700/50">
               <div>
                 <h2 className="text-2xl font-bold text-white">
                   📰 Trending News

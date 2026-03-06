@@ -29,7 +29,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex justify-center items-center p-4">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex justify-center items-center p-4">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
@@ -54,7 +54,7 @@ export default function LoginPage() {
         </div>
 
         {/* Inputs */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6 mb-8 px-2 py-4">
           <div>
             <input
               type="email"
