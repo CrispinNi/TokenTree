@@ -12,6 +12,11 @@ services:
       - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -19,7 +24,8 @@ services:
       DATABASE_URL: mysql+aiomysql://tokentree:tokentree_pw@db:3306/tokentree
       JWT_SECRET_KEY: CHANGE_ME_SUPER_SECRET
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
 
@@ -34,4 +40,3 @@ services:
 
 volumes:
   db_data:
-
