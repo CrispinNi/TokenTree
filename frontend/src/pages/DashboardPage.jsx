@@ -74,7 +74,7 @@ export default function DashboardPage() {
       <Navbar />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="max-w-[1400px] mx-auto px-8 py-8 space-y-16">
+        <div className="max-w-[1280px] mx-auto px-8 py-8 space-y-16">
           {/* Header */}
           <div className="pb-6 border-b border-slate-700/50">
             <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
