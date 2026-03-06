@@ -15,15 +15,23 @@ const ProtectedRoute = ({ element }) =>
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} />} />
-        <Route path="/add-crypto" element={<ProtectedRoute element={<AddCryptoPage />} />} />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/dashboard"
+            element={<ProtectedRoute element={<DashboardPage />} />}
+          />
+          <Route
+            path="/add-crypto"
+            element={<ProtectedRoute element={<AddCryptoPage />} />}
+          />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </>
   );
 }
 

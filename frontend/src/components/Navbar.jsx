@@ -11,7 +11,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 shadow-lg border-b border-slate-700">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-1 text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             🌳 TokenTree
