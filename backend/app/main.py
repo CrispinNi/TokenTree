@@ -400,6 +400,7 @@ async def trending_news():
                 "url": str(item.get("url", "")),
                 "source": item.get("source", None),
                 "published_at": item.get("published_on"),
+                "image": item.get("imageurl", ""),
             }
         )
     return items
