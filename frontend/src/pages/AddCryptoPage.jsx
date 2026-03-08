@@ -25,10 +25,10 @@ export default function AddCryptoPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-12">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-12">
             <h1 className="text-4xl font-bold text-white mb-2">
               Add Cryptocurrency
             </h1>

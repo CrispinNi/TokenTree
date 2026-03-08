@@ -41,7 +41,7 @@ export default function DashboardPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-4xl font-bold text-white mb-4">Dashboard</h1>
             <p className="text-slate-400 animate-pulse">
@@ -57,7 +57,7 @@ export default function DashboardPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-4xl font-bold text-white mb-4">Dashboard</h1>
             <div className="bg-red-900/20 border border-red-700 rounded-xl p-4 text-red-400">
@@ -72,28 +72,27 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 space-y-20">
+      <main className="flex-1">
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          <div className="max-w-[1400px] mx-auto px-8 py-8 space-y-16">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 flex flex-col gap-10">
             {/* Header */}
-            <section className="mb-8 space-y-6">
+            <section>
               <div className="pb-6 border-b border-slate-700/50">
-                <h1 className="text-4xl font-bold text-white mb-2">
-                  Dashboard
-                </h1>
-                <p className="text-slate-400">
+                <h1 className="text-4xl font-bold text-white">Dashboard</h1>
+
+                <p className="text-slate-400 text-lg mt-2">
                   Track and manage your crypto portfolio in real-time
                 </p>
               </div>
             </section>
 
             {/* Summary Cards */}
-            <section className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <section>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                 {/* Total Portfolio Value */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-start justify-between">
-                    <div className="p-8">
+                  <div className="flex items-center justify-between">
+                    <div>
                       <p className="text-slate-400 text-sm font-medium mb-2">
                         Total Portfolio Value
                       </p>
@@ -138,10 +137,10 @@ export default function DashboardPage() {
             </section>
 
             {/* Tokens Section */}
-            <section className="space-y-6">
+            <section>
               {summary.per_token.length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-8">
                     Your Holdings
                   </h2>
 
@@ -214,7 +213,7 @@ export default function DashboardPage() {
 
             {/* Trending News */}
             <div>
-              <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700/50">
+              <div className="flex items-center justify-between mb-8 pb-8 border-b border-slate-700/50">
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     📰 Trending News
