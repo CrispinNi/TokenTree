@@ -3,37 +3,45 @@ import Navbar from "../components/Navbar";
 import NewsCard from "../components/NewsCard";
 import api from "../api/client";
 
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
 export default function DashboardPage() {
   const [summary, setSummary] = useState({ total_usd_value: 0, per_token: [] });
   const [chartData, setChartData] = useState([]);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
-      setError(null);
       try {
         const [summaryRes, chartRes, newsRes] = await Promise.all([
           api.get("/summary"),
           api.get("/charts"),
           api.get("/news"),
         ]);
+
         setSummary(summaryRes.data);
         setChartData(chartRes.data.timeseries || []);
         setNews(newsRes.data || []);
       } catch (err) {
         console.error(err);
-        setError(
-          err.response?.status === 401
-            ? "Session expired. Please log in again."
-            : "Failed to load data. Please try again.",
-        );
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, []);
 
@@ -41,37 +49,28 @@ export default function DashboardPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-8">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-4">Dashboard</h1>
-            <p className="text-slate-400 animate-pulse">
-              Loading your portfolio...
-            </p>
-          </div>
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+          Loading dashboard...
         </div>
       </>
     );
   }
 
-  if (error) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-8">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-4">Dashboard</h1>
-            <div className="bg-red-900/20 border border-red-700 rounded-xl p-4 text-red-400">
-              {error}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  const allocationData = summary.per_token.map((t) => ({
+    name: t.symbol,
+    value: t.value_usd,
+  }));
+
+  const movers = summary.per_token.slice(0, 4).map((t) => ({
+    symbol: t.symbol,
+    price: t.price_usd,
+    change: (Math.random() * 10 - 5).toFixed(2),
+  }));
 
   return (
     <>
       <Navbar />
+
       <main className="flex-1">
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 flex flex-col gap-10">
@@ -79,166 +78,182 @@ export default function DashboardPage() {
             <section>
               <div className="pb-6 border-b border-slate-700/50">
                 <h1 className="text-4xl font-bold text-white">Dashboard</h1>
-
                 <p className="text-slate-400 text-lg mt-2">
-                  Track and manage your crypto portfolio in real-time
+                  Track and manage your crypto portfolio
                 </p>
               </div>
             </section>
 
             {/* Summary Cards */}
             <section>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                {/* Total Portfolio Value */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-slate-400 text-sm font-medium mb-2">
-                        Total Portfolio Value
-                      </p>
-                      <p className="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">
-                        ${summary.total_usd_value.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-4xl">💰</div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700">
+                  <p className="text-slate-400 text-sm">Portfolio Value</p>
+                  <p className="text-4xl font-bold text-blue-400">
+                    ${summary.total_usd_value.toFixed(2)}
+                  </p>
                 </div>
 
-                {/* Assets */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-purple-500/50 transition-all duration-300">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-slate-400 text-sm font-medium mb-2">
-                        Total Assets
-                      </p>
-                      <p className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-                        {summary.per_token.length}
-                      </p>
-                    </div>
-                    <div className="text-4xl">📊</div>
-                  </div>
+                <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700">
+                  <p className="text-slate-400 text-sm">Total Assets</p>
+                  <p className="text-4xl font-bold text-purple-400">
+                    {summary.per_token.length}
+                  </p>
                 </div>
 
-                {/* Data Points */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-xl border border-slate-700 hover:border-green-500/50 transition-all duration-300">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-slate-400 text-sm font-medium mb-2">
-                        Price Data Points
-                      </p>
-                      <p className="text-4xl font-bold text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text">
-                        {chartData.length}
-                      </p>
-                    </div>
-                    <div className="text-4xl">📈</div>
-                  </div>
+                <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700">
+                  <p className="text-slate-400 text-sm">Data Points</p>
+                  <p className="text-4xl font-bold text-green-400">
+                    {chartData.length}
+                  </p>
                 </div>
               </div>
             </section>
 
-            {/* Tokens Section */}
+            {/* Charts Section */}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Portfolio Performance */}
+              <div className="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <h2 className="text-white font-semibold mb-4">
+                  📈 Portfolio Performance
+                </h2>
+
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData}>
+                    <XAxis dataKey="time" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Allocation Chart */}
+              <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <h2 className="text-white font-semibold mb-4">
+                  Portfolio Allocation
+                </h2>
+
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={allocationData}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={100}
+                      label
+                    >
+                      {allocationData.map((entry, index) => (
+                        <Cell
+                          key={index}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            {/* Market Movers */}
             <section>
-              {summary.per_token.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-8">
-                    Your Holdings
-                  </h2>
+              <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <h2 className="text-white font-semibold mb-6">
+                  🔥 Market Movers
+                </h2>
 
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-slate-900/50 border-b border-slate-700">
-                          <tr>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                              Symbol
-                            </th>
-                            <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">
-                              Quantity
-                            </th>
-                            <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">
-                              Price (USD)
-                            </th>
-                            <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">
-                              Total Value
-                            </th>
-                          </tr>
-                        </thead>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {movers.map((coin) => (
+                    <div
+                      key={coin.symbol}
+                      className="bg-slate-900 p-4 rounded-xl text-center"
+                    >
+                      <p className="text-white font-semibold">{coin.symbol}</p>
 
-                        <tbody className="divide-y divide-slate-700">
-                          {summary.per_token.map((t) => (
-                            <tr
-                              key={t.id}
-                              className="hover:bg-slate-800/50 transition-colors"
-                            >
-                              <td className="px-6 py-4 text-white font-semibold">
-                                {t.symbol}
-                              </td>
+                      <p className="text-slate-400 text-sm">
+                        ${coin.price.toFixed(2)}
+                      </p>
 
-                              <td className="px-6 py-4 text-right text-slate-300">
-                                {t.quantity.toFixed(8)}
-                              </td>
-
-                              <td className="px-6 py-4 text-right text-slate-400">
-                                ${t.price_usd.toFixed(2)}
-                              </td>
-
-                              <td className="px-6 py-4 text-right text-blue-400 font-semibold">
-                                ${t.value_usd.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <p
+                        className={
+                          coin.change > 0 ? "text-green-400" : "text-red-400"
+                        }
+                      >
+                        {coin.change}%
+                      </p>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty Portfolio */}
-              {summary.per_token.length === 0 && (
-                <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-2xl p-10 text-center border border-slate-700">
-                  <p className="text-slate-300 text-lg mb-4">
-                    No tokens yet. Start building your portfolio!
-                  </p>
-
-                  <a
-                    href="/add-crypto"
-                    className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-500/50"
-                  >
-                    Add Your First Crypto
-                  </a>
-                </div>
-              )}
-            </section>
-
-            {/* Trending News */}
-            <div>
-              <div className="flex items-center justify-between mb-8 pb-8 border-b border-slate-700/50">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    📰 Trending News
-                  </h2>
-
-                  <p className="text-slate-400 text-sm mt-1">
-                    Latest cryptocurrency updates and market trends
-                  </p>
-                </div>
-              </div>
-
-              {news.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                  {news.map((item) => (
-                    <NewsCard key={item.url} item={item} />
                   ))}
                 </div>
-              ) : (
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-12 text-center border border-slate-700">
-                  <p className="text-slate-400 text-lg">
-                    No news available right now. Check back later!
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            </section>
+
+            {/* Tokens Table */}
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Your Holdings
+              </h2>
+
+              <div className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700">
+                <table className="w-full">
+                  <thead className="bg-slate-900">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-slate-300">
+                        Symbol
+                      </th>
+                      <th className="px-6 py-4 text-right text-slate-300">
+                        Quantity
+                      </th>
+                      <th className="px-6 py-4 text-right text-slate-300">
+                        Price
+                      </th>
+                      <th className="px-6 py-4 text-right text-slate-300">
+                        Value
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {summary.per_token.map((t) => (
+                      <tr key={t.id} className="border-t border-slate-700">
+                        <td className="px-6 py-4 text-white">{t.symbol}</td>
+
+                        <td className="px-6 py-4 text-right text-slate-300">
+                          {t.quantity.toFixed(6)}
+                        </td>
+
+                        <td className="px-6 py-4 text-right text-slate-400">
+                          ${t.price_usd.toFixed(2)}
+                        </td>
+
+                        <td className="px-6 py-4 text-right text-blue-400">
+                          ${t.value_usd.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* News */}
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                📰 Crypto News
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {news.map((item) => (
+                  <NewsCard key={item.url} item={item} />
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </main>

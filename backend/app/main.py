@@ -12,6 +12,7 @@ from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, fun
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base, relationship
 import httpx
+from sqlalchemy import select
 
 
 DATABASE_URL = os.getenv(
@@ -134,7 +135,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 async def get_user_by_email(session: AsyncSession, email: str) -> Optional[User]:
-    from sqlalchemy import select
 
     result = await session.execute(select(User).where(User.email == email))
     return result.scalars().first()
@@ -163,8 +163,6 @@ async def get_current_user(
         user_id: int = int(payload.get("sub"))
     except (JWTError, TypeError, ValueError):
         raise credentials_exception
-
-    from sqlalchemy import select
 
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
@@ -237,7 +235,7 @@ async def list_tokens(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import select
+
 
     result = await session.execute(
         select(Token).where(Token.user_id == current_user.id).order_by(Token.created_at.desc())
@@ -269,7 +267,6 @@ async def delete_token(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import select
 
     result = await session.execute(
         select(Token).where(Token.id == token_id, Token.user_id == current_user.id)
@@ -309,7 +306,6 @@ async def portfolio_summary(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import select
 
     result = await session.execute(select(Token).where(Token.user_id == current_user.id))
     tokens = result.scalars().all()
@@ -339,8 +335,7 @@ async def portfolio_summary(
 async def charts(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-):
-    from sqlalchemy import select
+): 
 
     result = await session.execute(select(Token).where(Token.user_id == current_user.id))
     tokens = result.scalars().all()
