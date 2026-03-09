@@ -18,16 +18,56 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
     environment:
       DATABASE_URL: mysql+aiomysql://tokentree:tokentree_pw@db:3306/tokentree
       JWT_SECRET_KEY: CHANGE_ME_SUPER_SECRET
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  celery_worker:
+    build: ./backend
+    environment:
+      DATABASE_URL: mysql+aiomysql://tokentree:tokentree_pw@db:3306/tokentree
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - db
+      - redis
+    command: celery -A app.celery_app worker --loglevel=info
+
+  celery_beat:
+    build: ./backend
+    environment:
+      DATABASE_URL: mysql+aiomysql://tokentree:tokentree_pw@db:3306/tokentree
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - db
+      - redis
+    command: celery -A app.celery_app beat --loglevel=info
 
   frontend:
     build:

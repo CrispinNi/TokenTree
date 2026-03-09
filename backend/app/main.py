@@ -13,6 +13,12 @@ from sqlalchemy.orm import declarative_base, relationship
 import httpx
 from sqlalchemy import select
 import asyncio
+import json
+
+# Import new modules for caching and WebSocket
+from app.cache import cache
+from app.websocket import manager
+from app.crypto_service import CryptoService
 
 
 DATABASE_URL = os.getenv(
@@ -186,6 +192,18 @@ app.add_middleware(
 async def on_startup() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Initialize cache and WebSocket manager
+    await cache.init()
+    await manager.init_redis()
+    print("Cache and WebSocket manager initialized")
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    """Clean up cache connection on shutdown"""
+    await cache.close()
+    print("Cache connection closed")
 
 
 @app.post("/auth/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
@@ -383,8 +401,14 @@ async def trending_news():
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(url, params=params, headers=headers)
             resp.raise_for_status()
-            data = resp.json().get("Data", [])
-    except Exception:
+            response_data = resp.json()
+            data = response_data.get("Data", [])
+            
+            # Ensure data is a list
+            if not isinstance(data, list):
+                return []
+    except Exception as e:
+        print(f"Error fetching news: {e}")
         return []
 
     items: List[dict] = []
@@ -399,9 +423,59 @@ async def trending_news():
             }
         )
     return items
+# ============================================================================
+# NEW ENDPOINTS: Crypto caching and WebSocket live streaming
+# ============================================================================
+
+@app.get("/api/crypto/price/{symbol}")
+async def get_crypto_price(symbol: str):
+    """Get current crypto price from cache or fetch fresh"""
+    price_data = await CryptoService.get_price(symbol.upper())
+    if not price_data:
+        raise HTTPException(status_code=404, detail="Crypto not found")
+    return price_data
+
+
+@app.get("/api/crypto/prices")
+async def get_crypto_prices(symbols: str):
+    """Get multiple crypto prices (comma-separated symbols)"""
+    symbol_list = [s.strip().upper() for s in symbols.split(",")]
+    return await CryptoService.get_prices_bulk(symbol_list)
+
+
+@app.post("/api/crypto/refresh")
+async def refresh_crypto_prices(symbols: List[str]):
+    """Manually trigger background job to update prices"""
+    CryptoService.trigger_price_update(symbols)
+    return {"status": "triggered", "symbols": symbols}
+
+
+@app.websocket("/ws/price/{symbol}")
+async def websocket_price_endpoint(websocket: WebSocket, symbol: str):
+    """WebSocket endpoint for streaming live crypto prices"""
+    symbol = symbol.upper()
+    await manager.connect(websocket, symbol)
+    
+    try:
+        # Subscribe to Redis pub/sub for this symbol
+        pubsub_task = asyncio.create_task(manager.subscribe_to_updates(symbol))
+        
+        # Keep connection alive and handle incoming messages
+        while True:
+            data = await websocket.receive_text()
+            # Echo back ping/pong if needed
+            await websocket.send_text(json.dumps({"type": "ping", "data": data}))
+    
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket, symbol)
+        print(f"Client disconnected from {symbol}")
+    except Exception as e:
+        await manager.disconnect(websocket, symbol)
+        print(f"WebSocket error for {symbol}: {e}")
+                
+    
 
 
 @app.get("/")
 async def root():
     return {"status": "ok", "message": "TokenTree API"}
-
