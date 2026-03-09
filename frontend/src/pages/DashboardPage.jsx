@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState([]);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
 
@@ -94,10 +95,16 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700">
+                <div
+                  onClick={() => setShowModal(true)}
+                  className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700 cursor-pointer hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200"
+                >
                   <p className="text-slate-400 text-sm">Total Assets</p>
                   <p className="text-4xl font-bold text-purple-400">
                     {summary.per_token.length}
+                  </p>
+                  <p className="text-slate-500 text-xs mt-2">
+                    Click to view holdings
                   </p>
                 </div>
 
@@ -194,54 +201,6 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Tokens Table */}
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-6">
-                Your Holdings
-              </h2>
-
-              <div className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700">
-                <table className="w-full">
-                  <thead className="bg-slate-900">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-slate-300">
-                        Symbol
-                      </th>
-                      <th className="px-6 py-4 text-right text-slate-300">
-                        Quantity
-                      </th>
-                      <th className="px-6 py-4 text-right text-slate-300">
-                        Price
-                      </th>
-                      <th className="px-6 py-4 text-right text-slate-300">
-                        Value
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {summary.per_token.map((t) => (
-                      <tr key={t.id} className="border-t border-slate-700">
-                        <td className="px-6 py-4 text-white">{t.symbol}</td>
-
-                        <td className="px-6 py-4 text-right text-slate-300">
-                          {t.quantity.toFixed(6)}
-                        </td>
-
-                        <td className="px-6 py-4 text-right text-slate-400">
-                          ${t.price_usd.toFixed(2)}
-                        </td>
-
-                        <td className="px-6 py-4 text-right text-blue-400">
-                          ${t.value_usd.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
             {/* News */}
             <section>
               <h2 className="text-2xl font-bold text-white mb-6">
@@ -257,6 +216,74 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-slate-900 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-white">Your Holdings</h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-white text-2xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="px-4 py-3 text-left text-slate-300">
+                      Symbol
+                    </th>
+                    <th className="px-4 py-3 text-right text-slate-300">
+                      Quantity
+                    </th>
+                    <th className="px-4 py-3 text-right text-slate-300">
+                      Price
+                    </th>
+                    <th className="px-4 py-3 text-right text-slate-300">
+                      Value
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {summary.per_token.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="border-b border-slate-700 hover:bg-slate-700/30"
+                    >
+                      <td className="px-4 py-3 text-white font-semibold">
+                        {t.symbol}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-300">
+                        {t.quantity.toFixed(6)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-400">
+                        ${t.price_usd.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-blue-400 font-semibold">
+                        ${t.value_usd.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {summary.per_token.length === 0 && (
+                <p className="text-center text-slate-400 py-8">
+                  No holdings yet
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
