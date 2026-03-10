@@ -28,8 +28,8 @@ export default function AddCryptoPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-8 lg:px-12 py-12">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold text-white mb-2">
+          <div className="mb-4">
+            <h1 className="text-4xl font-bold text-white ">
               Add Cryptocurrency
             </h1>
             <p className="text-slate-400">
@@ -39,11 +39,11 @@ export default function AddCryptoPage() {
 
           {/* Form Card */}
           <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 shadow-2xl border border-slate-700">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-2">
               {/* Coin Symbol Input */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-3">
-                  Cryptocurrency Symbol
+                <label className="block text-slate-300 font-semibold mb-1">
+                  Cryptocurrency Name
                 </label>
                 <input
                   type="text"
@@ -53,14 +53,11 @@ export default function AddCryptoPage() {
                   onChange={(e) => setSymbol(e.target.value)}
                   required
                 />
-                <p className="text-slate-500 text-sm mt-2">
-                  Enter the coin name or symbol (e.g., BTC, ETH)
-                </p>
               </div>
 
               {/* Quantity Input */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-3">
+                <label className="block text-slate-300 font-semibold mb-1">
                   Quantity
                 </label>
                 <input
@@ -100,14 +97,14 @@ export default function AddCryptoPage() {
           </div>
 
           {/* Info Section */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
               <h3 className="text-white font-semibold text-lg mb-3">
                 💡 Pro Tip
               </h3>
               <p className="text-slate-400 text-sm">
-                Use the full coin name or symbol. Our system will fetch
-                real-time price data for your portfolio tracking.
+                Use the full coin name. Our system will fetch real-time price
+                data for your portfolio tracking.
               </p>
             </div>
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
