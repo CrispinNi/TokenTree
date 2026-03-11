@@ -24,6 +24,9 @@ export default function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
 
   const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
+  const [editingToken, setEditingToken] = useState(null);
+  const [editQuantity, setEditQuantity] = useState("");
+  const [editPrice, setEditPrice] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -68,6 +71,68 @@ export default function DashboardPage() {
     price: t.price_usd,
     change: (Math.random() * 10 - 5).toFixed(2),
   }));
+
+  const handleEdit = (token) => {
+    setEditingToken(token);
+    setEditQuantity(token.quantity);
+    setEditPrice(token.price_usd);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8000/tokens/${editingToken.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            quantity: parseFloat(editQuantity),
+            price_usd: parseFloat(editPrice),
+          }),
+        },
+      );
+
+      if (res.ok) {
+        setEditingToken(null);
+
+        // reload dashboard
+        const summaryRes = await api.get("/summary");
+        setSummary(summaryRes.data);
+      } else {
+        alert("Failed to update token");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (tokenId) => {
+    if (!window.confirm("Delete this token?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/tokens/${tokenId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (res.ok) {
+        alert("Token deleted");
+
+        // Refresh data
+        const summaryRes = await api.get("/summary");
+        setSummary(summaryRes.data);
+      } else {
+        alert("Failed to delete token");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <>
@@ -250,6 +315,9 @@ export default function DashboardPage() {
                     <th className="px-4 py-3 text-right text-slate-300">
                       Value
                     </th>
+                    <th className="px-4 py-3 text-right text-slate-300">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
 
@@ -262,14 +330,36 @@ export default function DashboardPage() {
                       <td className="px-4 py-3 text-white font-semibold">
                         {t.symbol}
                       </td>
+
                       <td className="px-4 py-3 text-right text-slate-300">
                         {t.quantity.toFixed(6)}
                       </td>
+
                       <td className="px-4 py-3 text-right text-slate-400">
                         ${t.price_usd.toFixed(2)}
                       </td>
+
                       <td className="px-4 py-3 text-right text-blue-400 font-semibold">
                         ${t.value_usd.toFixed(2)}
+                      </td>
+
+                      {/* ACTION BUTTONS */}
+                      <td className="px-4 py-3 text-right space-x-2">
+                        {/* EDIT */}
+                        <button
+                          onClick={() => handleEdit(t)}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
+                        >
+                          Edit
+                        </button>
+
+                        {/* DELETE */}
+                        <button
+                          onClick={() => handleDelete(t.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -281,6 +371,57 @@ export default function DashboardPage() {
                   No holdings yet
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+
+      {editingToken && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-6 rounded-xl w-96 border border-slate-700">
+            <h3 className="text-white text-xl font-semibold mb-4">
+              Edit {editingToken.symbol}
+            </h3>
+
+            {/* Quantity */}
+            <div className="mb-4">
+              <label className="text-slate-300 text-sm">Quantity</label>
+              <input
+                type="number"
+                value={editQuantity}
+                onChange={(e) => setEditQuantity(e.target.value)}
+                className="w-full mt-1 p-2 rounded bg-slate-700 text-white"
+              />
+            </div>
+
+            {/* Price */}
+            <div className="mb-6">
+              <label className="text-slate-300 text-sm">Price (USD)</label>
+              <input
+                type="number"
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                className="w-full mt-1 p-2 rounded bg-slate-700 text-white"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setEditingToken(null)}
+                className="px-4 py-2 bg-slate-600 rounded text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>

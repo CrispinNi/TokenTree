@@ -116,6 +116,9 @@ class TokenResponse(BaseModel):
 class LoginResponse(TokenResponse):
     user: UserRead
 
+class TokenUpdate(BaseModel):
+    quantity: float
+    price_usd: float
 
 async def get_session() -> AsyncSession:
     async with AsyncSessionLocal() as session:
@@ -295,7 +298,35 @@ async def delete_token(
     await session.delete(token)
     await session.commit()
     return None
+@app.put("/tokens/{token_id}")
+async def update_token(
+    token_id: int,
+    token_data: TokenUpdate,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
 
+    result = await session.execute(
+        select(Token).where(
+            Token.id == token_id,
+            Token.user_id == current_user.id
+        )
+    )
+
+    token = result.scalars().first()
+
+    if not token:
+        raise HTTPException(status_code=404, detail="Token not found")
+
+    token.quantity = token_data.quantity
+
+    await session.commit()
+    await session.refresh(token)
+
+    return {
+        "message": "Token updated successfully",
+        "token_id": token.id
+    }
 
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 
