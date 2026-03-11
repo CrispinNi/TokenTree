@@ -1,5 +1,5 @@
 from app.cache import cache
-from app.tasks import fetch_crypto_price, fetch_and_cache_prices
+from app.tasks import fetch_all_prices, fetch_and_cache_prices
 import json
 from typing import Optional, List
 import asyncio
@@ -19,7 +19,7 @@ class CryptoService:
         
         # If not in cache, fetch fresh (this will be cached by background job)
         try:
-            price_data = await fetch_crypto_price(symbol)
+            price_data = await fetch_all_prices([symbol])
             if price_data:
                 await cache.set(f"crypto_price:{symbol}", price_data, ttl=300)
             await cache.close()
