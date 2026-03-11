@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import api from "../api/client";
+import Footer from "../components/Footer";
 
 export default function AddCryptoPage() {
   const [symbol, setSymbol] = useState("");
@@ -119,6 +120,7 @@ export default function AddCryptoPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import NewsCard from "../components/NewsCard";
 import api from "../api/client";
 
@@ -73,7 +74,7 @@ export default function DashboardPage() {
       <Navbar />
 
       <main className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="min-h-screen flex flex-col gap-8">
+        <div className="min-h-screen flex flex-col gap-4">
           {/* Header */}
           <section>
             <div className="pb-6 border-b border-slate-700/50">
@@ -284,6 +285,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      <Footer />
     </>
   );
 }
