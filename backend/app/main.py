@@ -15,6 +15,7 @@ from sqlalchemy import select
 import asyncio
 import json
 
+
 # Import new modules for caching and WebSocket
 from app.cache import cache
 from app.websocket import manager
@@ -23,7 +24,7 @@ from app.crypto_service import CryptoService
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:password@localhost:5432/tokentree"
+    "postgresql+asyncpg://postgres:postgres@db:5432/tokentree"
 )
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET")

@@ -29,7 +29,7 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/tokentreee
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tokentree
       JWT_SECRET_KEY: CHANGE_ME_SUPER_SECRET
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
