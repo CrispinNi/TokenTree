@@ -28,3 +28,10 @@ services:
 databases:
   - name: mysql-db
     plan: free
+
+envVars:
+  - key: SECRET_KEY
+    generateValue: true
+
+  - key: API_URL
+    value: https://fastapi-backend.onrender.com
