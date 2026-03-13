@@ -23,21 +23,8 @@ services:
           name: tokentree-redis
           property: connectionString
 
-      - key: CELERY_BROKER_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
-
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
-
       - key: JWT_SECRET_KEY
         generateValue: true
-
   # ===============================
   # React Frontend
   # ===============================
