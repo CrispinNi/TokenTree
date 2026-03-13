@@ -2,7 +2,8 @@ import axios from "axios";
 import { logout } from "../utils/auth";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  baseURL:
+    import.meta.env.VITE_API_URL || "https://fastapi-backend.onrender.com",
 });
 
 api.interceptors.request.use((config) => {
@@ -21,8 +22,7 @@ api.interceptors.response.use(
       window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
-
