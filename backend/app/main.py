@@ -23,7 +23,7 @@ from app.crypto_service import CryptoService
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "mysql+aiomysql://tokentree:tokentree_pw@db:3306/token_tree",
+    "postgresql+asyncpg://postgres:password@localhost:5432/tokentree"
 )
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET")
