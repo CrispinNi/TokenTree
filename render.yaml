@@ -112,17 +112,16 @@ services:
           name: tokentree-redis
           property: connectionString
 
+  # ===============================
+  # Redis
+  # ===============================
+  - type: redis
+    name: tokentree-redis
+    plan: free
+
 # ===============================
 # PostgreSQL Database
 # ===============================
 databases:
   - name: tokentree-db
-    plan: free
-
-# ===============================
-# Redis
-# ===============================
-services:
-  - type: redis
-    name: tokentree-redis
     plan: free
