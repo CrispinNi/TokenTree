@@ -41,7 +41,7 @@ services:
     autoDeploy: true
     envVars:
       - key: VITE_API_URL
-        value: https://tokentree-api.onrender.com
+        value: https://fastapi-backend-6rew.onrender.com
 
   # ===============================
   # Celery Worker
