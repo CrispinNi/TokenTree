@@ -441,7 +441,7 @@ async def charts(
 
 @app.get("/news")
 async def trending_news():
-    url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
+    url = "https://min-api.cryptocompare.com/data/v2/news/"
     params = {"lang": "EN"}
 
     api_key = os.getenv("CRYPTOCOMPARE_API_KEY")
