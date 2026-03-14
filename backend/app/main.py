@@ -45,10 +45,7 @@ if DATABASE_URL.startswith("postgresql://"):
 
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-
-if not JWT_SECRET_KEY:
-    raise RuntimeError("JWT_SECRET_KEY environment variable not set")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET")
 
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
