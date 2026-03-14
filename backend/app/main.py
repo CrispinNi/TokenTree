@@ -450,7 +450,7 @@ async def trending_news():
     # 1️⃣ Check cache first
     cached_news = await cache.get("crypto_news")
     if cached_news:
-        return json.loads(cached_news)
+        return cached_news
 
     news = []
 
