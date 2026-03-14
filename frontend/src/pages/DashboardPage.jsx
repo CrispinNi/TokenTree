@@ -16,6 +16,18 @@ import {
   Cell,
 } from "recharts";
 
+const [summaryRes, chartRes, newsRes] = await Promise.all([
+  api.get("/summary"),
+  api.get("/charts"),
+  api.get("/news"),
+]);
+
+console.log("News API:", newsRes.data);
+
+setSummary(summaryRes.data);
+setChartData(chartRes.data.timeseries || []);
+setNews(newsRes.data || []);
+
 export default function DashboardPage() {
   const [summary, setSummary] = useState({ total_usd_value: 0, per_token: [] });
   const [chartData, setChartData] = useState([]);

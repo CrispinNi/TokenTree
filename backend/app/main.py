@@ -441,14 +441,71 @@ async def charts(
 
 @app.get("/news")
 async def trending_news():
-    url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
+    """
+    Get crypto news with Redis caching.
+    Cache duration: 10 minutes
+    Fallback to CoinGecko if CryptoCompare fails
+    """
 
+    # 1️⃣ Check cache first
+    cached_news = await cache.get("crypto_news")
+    if cached_news:
+        return json.loads(cached_news)
+
+    news = []
+
+    # 2️⃣ Try CryptoCompare first
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(url)
-            return response.json()
+        url = "https://min-api.cryptocompare.com/data/v2/news/"
+        params = {"lang": "EN"}
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            news_data = data.get("Data", [])
+
+            for item in news_data[:20]:
+                news.append({
+                    "title": item.get("title"),
+                    "url": item.get("url"),
+                    "source": item.get("source"),
+                    "image": item.get("imageurl"),
+                    "published": item.get("published_on"),
+                })
+
     except Exception as e:
-        return {"error": str(e)}
+        print("CryptoCompare failed:", e)
+
+    # 3️⃣ Fallback to CoinGecko if empty
+    if not news:
+        try:
+            url = "https://api.coingecko.com/api/v3/news"
+
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+
+                for item in data.get("data", [])[:20]:
+                    news.append({
+                        "title": item.get("title"),
+                        "url": item.get("url"),
+                        "source": item.get("author"),
+                        "image": item.get("thumb_2x"),
+                        "published": item.get("updated_at"),
+                    })
+
+        except Exception as e:
+            print("CoinGecko failed:", e)
+
+    # 4️⃣ Cache result for 10 minutes
+    if news:
+        await cache.set("crypto_news", json.dumps(news), expire=600)
+
+    return news
 # ============================================================================
 # NEW ENDPOINTS: Crypto caching and WebSocket live streaming
 # ============================================================================
