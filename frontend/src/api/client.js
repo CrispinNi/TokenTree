@@ -2,7 +2,8 @@ import axios from "axios";
 import { logout } from "../utils/auth";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL:
+    import.meta.env.VITE_API_URL || "https://fastapi-backend-6rew.onrender.com",
 });
 
 api.interceptors.request.use((config) => {
