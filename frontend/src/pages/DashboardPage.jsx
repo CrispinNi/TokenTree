@@ -81,7 +81,7 @@ export default function DashboardPage() {
   const handleUpdate = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8000/tokens/${editingToken.id}`,
+        `https://fastapi-backend-6rew.onrender.com/tokens/${editingToken.id}`,
         {
           method: "PUT",
           headers: {
@@ -113,12 +113,15 @@ export default function DashboardPage() {
     if (!window.confirm("Delete this token?")) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/tokens/${tokenId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      const res = await fetch(
+        `https://fastapi-backend-6rew.onrender.com/tokens/${tokenId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         },
-      });
+      );
 
       if (res.ok) {
         alert("Token deleted");

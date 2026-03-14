@@ -45,7 +45,11 @@ if DATABASE_URL.startswith("postgresql://"):
 
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+if not JWT_SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable not set")
+
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
 
@@ -203,7 +207,7 @@ app = FastAPI(title="TokenTree API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://react-frontend-g87k.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -442,37 +446,39 @@ async def charts(
 async def trending_news():
     url = "https://min-api.cryptocompare.com/data/v2/news/"
     params = {"lang": "EN"}
-    headers = {}
+
     api_key = os.getenv("CRYPTOCOMPARE_API_KEY")
+
+    headers = {}
     if api_key:
         headers["authorization"] = f"Apikey {api_key}"
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(url, params=params, headers=headers)
-            resp.raise_for_status()
-            response_data = resp.json()
-            data = response_data.get("Data", [])
-            
-            # Ensure data is a list
-            if not isinstance(data, list):
-                return []
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, params=params, headers=headers)
+
+            if response.status_code != 200:
+                print("CryptoCompare error:", response.text)
+                raise HTTPException(status_code=502, detail="News service unavailable")
+
+            data = response.json().get("Data", [])
+
     except Exception as e:
-        print(f"Error fetching news: {e}")
+        print("Error fetching crypto news:", e)
         return []
 
-    items: List[dict] = []
+    news_items = []
+
     for item in data[:20]:
-        items.append(
-            {
-                "title": item.get("title", ""),
-                "url": str(item.get("url", "")),
-                "source": item.get("source", None),
-                "published_at": item.get("published_on"),
-                "image": item.get("imageurl", ""),
-            }
-        )
-    return items
+        news_items.append({
+            "title": item.get("title"),
+            "url": item.get("url"),
+            "source": item.get("source"),
+            "published_at": item.get("published_on"),
+            "image": item.get("imageurl"),
+        })
+
+    return news_items
 # ============================================================================
 # NEW ENDPOINTS: Crypto caching and WebSocket live streaming
 # ============================================================================
