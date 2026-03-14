@@ -463,19 +463,22 @@ async def trending_news():
     except Exception as e:
         print("News fetch error:", e)
         return []
+    
+    news = []
 
-    news_items = []
-
-    for item in data.get("Data", [])[:20]:
-        news_items.append({
+    news_data = data.get("Data")
+        
+    if isinstance(news_data, list):
+             for item in news_data[:20]:
+                news.append({
             "title": item.get("title"),
             "url": item.get("url"),
             "source": item.get("source"),
-            "published_at": item.get("published_on"),
             "image": item.get("imageurl"),
+            "published": item.get("published_on"),
         })
 
-    return news_items
+    return news
 # ============================================================================
 # NEW ENDPOINTS: Crypto caching and WebSocket live streaming
 # ============================================================================
