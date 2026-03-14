@@ -441,44 +441,14 @@ async def charts(
 
 @app.get("/news")
 async def trending_news():
-    url = "https://min-api.cryptocompare.com/data/v2/news/"
-    params = {"lang": "EN"}
-
-    api_key = os.getenv("CRYPTOCOMPARE_API_KEY")
-
-    headers = {}
-    if api_key:
-        headers["authorization"] = f"Apikey {api_key}"
+    url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
 
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.get(url, params=params, headers=headers)
-
-            if response.status_code != 200:
-                print("CryptoCompare API error:", response.text)
-                return []
-
-            data = response.json()
-
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url)
+            return response.json()
     except Exception as e:
-        print("News fetch error:", e)
-        return []
-    
-    news = []
-
-    news_data = data.get("Data")
-        
-    if isinstance(news_data, list):
-             for item in news_data[:20]:
-                news.append({
-            "title": item.get("title"),
-            "url": item.get("url"),
-            "source": item.get("source"),
-            "image": item.get("imageurl"),
-            "published": item.get("published_on"),
-        })
-
-    return news
+        return {"error": str(e)}
 # ============================================================================
 # NEW ENDPOINTS: Crypto caching and WebSocket live streaming
 # ============================================================================
