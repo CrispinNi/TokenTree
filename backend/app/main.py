@@ -455,18 +455,18 @@ async def trending_news():
             response = await client.get(url, params=params, headers=headers)
 
             if response.status_code != 200:
-                print("CryptoCompare error:", response.text)
-                raise HTTPException(status_code=502, detail="News service unavailable")
+                print("CryptoCompare API error:", response.text)
+                return []
 
-            data = response.json().get("Data", [])
+            data = response.json()
 
     except Exception as e:
-        print("Error fetching crypto news:", e)
+        print("News fetch error:", e)
         return []
 
     news_items = []
 
-    for item in data[:20]:
+    for item in data.get("Data", [])[:20]:
         news_items.append({
             "title": item.get("title"),
             "url": item.get("url"),
