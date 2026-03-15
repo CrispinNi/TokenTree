@@ -213,17 +213,14 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def on_startup():
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     await cache.init()
     await manager.init_redis()
 
-    asyncio.create_task(price_updater())
-
-    print("Cache, WebSocket manager, and price updater initialized")
-
-
+    print("Redis cache and WebSocket manager initialized")
 
 
 @app.on_event("shutdown")
@@ -355,95 +352,6 @@ async def update_token(
     }
 
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
-
-
-COIN_MAP = {
-    "BTC": "bitcoin",
-    "ETH": "ethereum",
-    "SOL": "solana",
-    "BNB": "binancecoin",
-    "ADA": "cardano",
-    "DOGE": "dogecoin",
-    "XRP": "ripple",
-    "DOT": "polkadot",
-    "MATIC": "matic-network"
-}
-
-async def fetch_prices(symbols: List[str]) -> dict:
-    if not symbols:
-        return {}
-
-    ids = [COIN_MAP.get(s.upper()) for s in symbols if COIN_MAP.get(s.upper())]
-
-    if not ids:
-        return {}
-
-    url = f"{COINGECKO_BASE}/simple/price"
-    params = {
-        "ids": ",".join(ids),
-        "vs_currencies": "usd"
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 429:
-            print("CoinGecko rate limit hit. Sleeping 60s...")
-            await asyncio.sleep(60)
-        else:
-            print("Price API error:", e)
-
-        return {}
-
-    result = {}
-
-    for symbol in symbols:
-        coin_id = COIN_MAP.get(symbol.upper())
-        if coin_id and coin_id in data:
-            result[symbol.upper()] = data[coin_id]["usd"]
-
-        if result:
-            await cache.set("latest_prices", result, ttl=3600)
-
-    # ==============================
-    # Store price history in Redis
-    # ==============================
-
-    now = datetime.utcnow().isoformat()
-
-    for symbol, price in result.items():
-        history_key = f"history:{symbol}"
-
-        entry = json.dumps({
-            "time": now,
-            "price": price
-        })
-
-        if cache.redis:
-            await cache.redis.lpush(history_key, entry)
-            await cache.redis.ltrim(history_key, 0, 1439)
-            await cache.redis.expire(history_key, 86400)
-
-    return result
-
-async def price_updater():
-
-    await asyncio.sleep(30)  # wait after startup
-
-    while True:
-        try:
-            symbols = list(COIN_MAP.keys())
-            await fetch_prices(symbols)
-
-        except Exception as e:
-            print("Price updater error:", e)
-
-        await asyncio.sleep(1800)
-        await asyncio.sleep(1800)
     
 
 @app.get("/summary", response_model=TokenSummary)
@@ -455,9 +363,13 @@ async def portfolio_summary(
     result = await session.execute(select(Token).where(Token.user_id == current_user.id))
     tokens = result.scalars().all()
     symbols = list({t.symbol for t in tokens})
-    prices = await get_cached_prices(symbols)
-    if not prices:
-        prices = await fetch_prices(symbols)
+    prices = {}
+    for symbol in symbols:
+        data = await cache.get(f"crypto_price:{symbol}")
+        if data:
+            prices[symbol] = data["price"]
+        else:
+            prices[symbol] = 0
 
     per_token = []
     total = 0.0
@@ -477,16 +389,6 @@ async def portfolio_summary(
 
     return TokenSummary(total_usd_value=total, per_token=per_token)
 
-async def get_cached_prices(symbols: List[str]) -> dict:
-
-    prices = await cache.get("latest_prices")
-
-    if prices:
-        return {s: prices.get(s, 0) for s in symbols}
-
-    # fallback if cache empty
-    prices = await fetch_prices(symbols)
-    return prices
 
 
 @app.get("/charts", response_model=ChartData)
