@@ -390,8 +390,13 @@ async def fetch_prices(symbols: List[str]) -> dict:
             resp.raise_for_status()
             data = resp.json()
 
-    except Exception as e:
-        print("Price API error:", e)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            print("CoinGecko rate limit hit. Sleeping 60s...")
+            await asyncio.sleep(60)
+        else:
+            print("Price API error:", e)
+
         return {}
 
     result = {}
@@ -400,6 +405,9 @@ async def fetch_prices(symbols: List[str]) -> dict:
         coin_id = COIN_MAP.get(symbol.upper())
         if coin_id and coin_id in data:
             result[symbol.upper()] = data[coin_id]["usd"]
+
+        if result:
+            await cache.set("latest_prices", result, ttl=3600)
 
     # ==============================
     # Store price history in Redis
@@ -411,26 +419,31 @@ async def fetch_prices(symbols: List[str]) -> dict:
         history_key = f"history:{symbol}"
 
         entry = json.dumps({
-        "time": now,
-        "price": price
+            "time": now,
+            "price": price
         })
 
-        # Add newest entry to Redis list
         await cache.redis.lpush(history_key, entry)
-
-        # Keep only last 1440 entries (24h if updating every minute)
         await cache.redis.ltrim(history_key, 0, 1439)
-
-        # Ensure key expires after 24h if unused
         await cache.redis.expire(history_key, 86400)
 
     return result
 
 async def price_updater():
+    await asyncio.sleep(20)  # wait for app to fully start
+
     while True:
-        symbols = list(COIN_MAP.keys())
-        await fetch_prices(symbols)
-        await asyncio.sleep(60)  # update every minute
+        try:
+            symbols = list(COIN_MAP.keys())
+            print("Updating crypto prices...")
+
+            await fetch_prices(symbols)
+
+        except Exception as e:
+            print("Price updater error:", e)
+
+        # 30 minutes
+        await asyncio.sleep(1800)
     
 
 @app.get("/summary", response_model=TokenSummary)
@@ -442,7 +455,9 @@ async def portfolio_summary(
     result = await session.execute(select(Token).where(Token.user_id == current_user.id))
     tokens = result.scalars().all()
     symbols = list({t.symbol for t in tokens})
-    prices = await fetch_prices(symbols)
+    prices = await get_cached_prices(symbols)
+    if not prices:
+        prices = await fetch_prices(symbols)
 
     per_token = []
     total = 0.0
@@ -461,6 +476,17 @@ async def portfolio_summary(
         )
 
     return TokenSummary(total_usd_value=total, per_token=per_token)
+
+async def get_cached_prices(symbols: List[str]) -> dict:
+
+    prices = await cache.get("latest_prices")
+
+    if prices:
+        return {s: prices.get(s, 0) for s in symbols}
+
+    # fallback if cache empty
+    prices = await fetch_prices(symbols)
+    return prices
 
 
 @app.get("/charts", response_model=ChartData)
@@ -487,8 +513,17 @@ async def charts(
             continue
 
         history = [json.loads(h) for h in reversed(history_data)]
-        timestamps = [h["time"] for h in history]  
+
+        timestamps = [h["time"] for h in history]
         prices = [h["price"] for h in history]
+
+        points.append(
+            TokenDataPoint(
+                symbol=symbol,
+                timestamps=timestamps,
+                prices=prices
+            )
+        )
 
     return ChartData(timeseries=points)
 
