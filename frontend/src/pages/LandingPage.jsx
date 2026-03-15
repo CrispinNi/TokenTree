@@ -12,7 +12,7 @@ const LandingPage = () => {
           "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",
           {
             headers: {
-              "X-CMC_PRO_API_KEY": "YOUR_API_KEY_HERE", // replace with your API key
+              "X-CMC_PRO_API_KEY": "2a190483acb1475d80f2b18deb042d82", // replace with your API key
             },
             params: {
               start: 1,
