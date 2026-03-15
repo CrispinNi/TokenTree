@@ -4,8 +4,8 @@ from typing import Any, Optional
 from redis.asyncio import Redis
 import redis.exceptions
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
+REDIS_URL = os.getenv("REDIS_URL")
+print("REDIS_URL:", REDIS_URL)
 
 class RedisCache:
     def __init__(self):

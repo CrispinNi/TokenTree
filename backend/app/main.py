@@ -423,9 +423,10 @@ async def fetch_prices(symbols: List[str]) -> dict:
             "price": price
         })
 
-        await cache.redis.lpush(history_key, entry)
-        await cache.redis.ltrim(history_key, 0, 1439)
-        await cache.redis.expire(history_key, 86400)
+        if cache.redis:
+            await cache.redis.lpush(history_key, entry)
+            await cache.redis.ltrim(history_key, 0, 1439)
+            await cache.redis.expire(history_key, 86400)
 
     return result
 
@@ -507,6 +508,9 @@ async def charts(
     points = []
 
     for symbol in symbols:
+        if not cache.redis:
+            return ChartData(timeseries=[])
+
         history_data = await cache.redis.lrange(f"history:{symbol}", 0, -1)
 
         if not history_data:
@@ -519,10 +523,10 @@ async def charts(
 
         points.append(
             TokenDataPoint(
-                symbol=symbol,
-                timestamps=timestamps,
-                prices=prices
-            )
+            symbol=symbol,
+            timestamps=timestamps,
+            prices=prices
+          )
         )
 
     return ChartData(timeseries=points)
