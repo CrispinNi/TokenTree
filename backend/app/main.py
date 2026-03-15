@@ -431,19 +431,18 @@ async def fetch_prices(symbols: List[str]) -> dict:
     return result
 
 async def price_updater():
-    await asyncio.sleep(20)  # wait for app to fully start
+
+    await asyncio.sleep(30)  # wait after startup
 
     while True:
         try:
             symbols = list(COIN_MAP.keys())
-            print("Updating crypto prices...")
-
             await fetch_prices(symbols)
 
         except Exception as e:
             print("Price updater error:", e)
 
-        # 30 minutes
+        await asyncio.sleep(1800)
         await asyncio.sleep(1800)
     
 
