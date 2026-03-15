@@ -212,14 +212,18 @@ app.add_middleware(
 
 
 @app.on_event("startup")
-async def on_startup() -> None:
+async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
-    # Initialize cache and WebSocket manager
+
     await cache.init()
     await manager.init_redis()
-    print("Cache and WebSocket manager initialized")
+
+    asyncio.create_task(price_updater())
+
+    print("Cache, WebSocket manager, and price updater initialized")
+
+
 
 
 @app.on_event("shutdown")
@@ -318,6 +322,8 @@ async def delete_token(
     await session.delete(token)
     await session.commit()
     return None
+
+
 @app.put("/tokens/{token_id}")
 async def update_token(
     token_id: int,
@@ -351,24 +357,81 @@ async def update_token(
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 
 
+COIN_MAP = {
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "SOL": "solana",
+    "BNB": "binancecoin",
+    "ADA": "cardano",
+    "DOGE": "dogecoin",
+    "XRP": "ripple",
+    "DOT": "polkadot",
+    "MATIC": "matic-network"
+}
+
 async def fetch_prices(symbols: List[str]) -> dict:
     if not symbols:
         return {}
 
-    ids = ",".join(s.lower() for s in symbols)
+    ids = [COIN_MAP.get(s.upper()) for s in symbols if COIN_MAP.get(s.upper())]
+
+    if not ids:
+        return {}
+
     url = f"{COINGECKO_BASE}/simple/price"
-    params = {"ids": ids, "vs_currencies": "usd"}
+    params = {
+        "ids": ",".join(ids),
+        "vs_currencies": "usd"
+    }
+
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(url, params=params)
             resp.raise_for_status()
             data = resp.json()
-    except Exception:
-        # On any pricing API error (429 rate limit, network, etc.), fall back to zero prices
+
+    except Exception as e:
+        print("Price API error:", e)
         return {}
 
-    return {k.upper(): v.get("usd", 0.0) for k, v in data.items()}
+    result = {}
 
+    for symbol in symbols:
+        coin_id = COIN_MAP.get(symbol.upper())
+        if coin_id and coin_id in data:
+            result[symbol.upper()] = data[coin_id]["usd"]
+
+    # ==============================
+    # Store price history in Redis
+    # ==============================
+
+    now = datetime.utcnow().isoformat()
+
+    for symbol, price in result.items():
+        history_key = f"history:{symbol}"
+
+        entry = json.dumps({
+        "time": now,
+        "price": price
+        })
+
+        # Add newest entry to Redis list
+        await cache.redis.lpush(history_key, entry)
+
+        # Keep only last 1440 entries (24h if updating every minute)
+        await cache.redis.ltrim(history_key, 0, 1439)
+
+        # Ensure key expires after 24h if unused
+        await cache.redis.expire(history_key, 86400)
+
+    return result
+
+async def price_updater():
+    while True:
+        symbols = list(COIN_MAP.keys())
+        await fetch_prices(symbols)
+        await asyncio.sleep(60)  # update every minute
+    
 
 @app.get("/summary", response_model=TokenSummary)
 async def portfolio_summary(
@@ -404,47 +467,36 @@ async def portfolio_summary(
 async def charts(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-): 
+):
 
-    result = await session.execute(select(Token).where(Token.user_id == current_user.id))
+    result = await session.execute(
+        select(Token).where(Token.user_id == current_user.id)
+    )
     tokens = result.scalars().all()
+
     symbols = list({t.symbol for t in tokens})
     if not symbols:
         return ChartData(timeseries=[])
 
-    end = int(datetime.utcnow().timestamp())
-    start = end - 60 * 60 * 24
+    points = []
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        points: List[TokenDataPoint] = []
-        for symbol in symbols:
-            coin_id = symbol.lower()
-            url = f"{COINGECKO_BASE}/coins/{coin_id}/market_chart/range"
-            params = {"vs_currency": "usd", "from": start, "to": end}
-            try:
-                resp = await client.get(url, params=params)
-                resp.raise_for_status()
-                data = resp.json()
-                prices = data.get("prices", [])
-                timestamps = [
-                    datetime.utcfromtimestamp(p[0] / 1000).isoformat() for p in prices
-                ]
-                values = [float(p[1]) for p in prices]
-                points.append(
-                    TokenDataPoint(symbol=symbol.upper(), timestamps=timestamps, prices=values)
-                )
-            except Exception:
-                continue
+    for symbol in symbols:
+        history_data = await cache.redis.lrange(f"history:{symbol}", 0, -1)
+
+        if not history_data:
+            continue
+
+        history = [json.loads(h) for h in reversed(history_data)]
+        timestamps = [h["time"] for h in history]  
+        prices = [h["price"] for h in history]
 
     return ChartData(timeseries=points)
-
 
 @app.get("/news")
 async def trending_news():
     """
-    Get crypto news with Redis caching.
-    Cache duration: 10 minutes
-    Fallback to CoinGecko if CryptoCompare fails
+    Crypto news endpoint with strict caching
+    Prevents exceeding CryptoPanic limits
     """
 
     # 1️⃣ Check cache first
@@ -454,56 +506,38 @@ async def trending_news():
 
     news = []
 
-    # 2️⃣ Try CryptoCompare first
     try:
-        url = "https://min-api.cryptocompare.com/data/v2/news/"
-        params = {"lang": "EN"}
+        url = "https://cryptopanic.com/api/v1/posts/"
+        params = {
+            "auth_token": os.getenv("CRYPTOPANIC_API_KEY"),
+            "public": "true"
+        }
 
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(url, params=params)
 
         if response.status_code == 200:
             data = response.json()
-            news_data = data.get("Data", [])
 
-            for item in news_data[:20]:
+            for item in data.get("results", [])[:20]:
                 news.append({
                     "title": item.get("title"),
                     "url": item.get("url"),
-                    "source": item.get("source"),
-                    "image": item.get("imageurl"),
-                    "published": item.get("published_on"),
+                    "source": item.get("source", {}).get("title"),
+                    "image": None,
+                    "published": item.get("published_at")
                 })
+        if not news:
+            cached_news = await cache.get("crypto_news")
+            if cached_news:
+                return cached_news
 
     except Exception as e:
-        print("CryptoCompare failed:", e)
+        print("News API failed:", e)
 
-    # 3️⃣ Fallback to CoinGecko if empty
-    if not news:
-        try:
-            url = "https://api.coingecko.com/api/v3/news"
-
-            async with httpx.AsyncClient(timeout=15) as client:
-                response = await client.get(url)
-
-            if response.status_code == 200:
-                data = response.json()
-
-                for item in data.get("data", [])[:20]:
-                    news.append({
-                        "title": item.get("title"),
-                        "url": item.get("url"),
-                        "source": item.get("author"),
-                        "image": item.get("thumb_2x"),
-                        "published": item.get("updated_at"),
-                    })
-
-        except Exception as e:
-            print("CoinGecko failed:", e)
-
-    # 4️⃣ Cache result for 10 minutes
+    # 2️⃣ Cache for 12 hours (21600 seconds)
     if news:
-        await cache.set("crypto_news", json.dumps(news), expire=600)
+        await cache.set("crypto_news", news, ttl=43200)
 
     return news
 # ============================================================================
