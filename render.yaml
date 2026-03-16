@@ -18,8 +18,7 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
-
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
       - key: JWT_SECRET_KEY
         generateValue: true
 
@@ -60,13 +59,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_BROKER_URL
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_RESULT_BACKEND
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
   # ===============================
   # Celery Beat Scheduler
@@ -87,13 +86,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379redis://default:********@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_BROKER_URL
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_RESULT_BACKEND
-        value: redis-cli --tls -u redis://default:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
+        value: redis://:gQAAAAAAAR36AAIncDIzN2E4ZGIzNDM0MDM0YmNlOTY5MWFmZmI4ZjY4ZmM5ZXAyNzMyMTA@pleasing-colt-73210.upstash.io:6379
 
 # ===============================
 # PostgreSQL Database
