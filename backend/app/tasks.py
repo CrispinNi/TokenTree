@@ -21,16 +21,7 @@ def fetch_and_cache_prices(self, symbols: list):
 
             await cache.init()
 
-            ids = []
-            symbol_map = {}
-
-            for symbol in symbols:
-
-                coin_id = await CryptoService.get_coin_id(symbol)
-
-                if coin_id:
-                    ids.append(coin_id)
-                    symbol_map[coin_id] = symbol
+            ids = [coin.lower() for coin in symbols]
 
             if not ids:
                 print("No valid symbols")
@@ -53,10 +44,8 @@ def fetch_and_cache_prices(self, symbols: list):
 
             for coin_id, coin_data in data.items():
 
-                symbol = symbol_map.get(coin_id)
-
                 price_data = {
-                    "symbol": symbol,
+                    "symbol": coin_id,
                     "price": coin_data.get("usd"),
                     "market_cap": coin_data.get("usd_market_cap"),
                     "volume_24h": coin_data.get("usd_24h_vol"),
@@ -65,17 +54,15 @@ def fetch_and_cache_prices(self, symbols: list):
                 }
 
                 await cache.set(
-                    f"crypto_price:{symbol}",
-                    price_data,
-                    ttl=300
+                    f"crypto_price:{coin_id}",
+                   
                 )
 
                 await cache.publish(
-                    f"price_updates:{symbol}",
-                    json.dumps(price_data)
+                    f"price_updates:{coin_id}",
                 )
 
-                print(f"Updated {symbol}: ${price_data['price']}")
+                print(f"Updated {coin_id}: ${price_data['price']}")
 
             await cache.close()
 

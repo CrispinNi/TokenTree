@@ -220,9 +220,6 @@ async def on_startup():
     await cache.init()
     await manager.init_redis()
 
-    # preload CoinGecko symbols
-    await CryptoService.refresh_coin_list()
-
     print("Redis cache and WebSocket manager initialized")
 
 @app.on_event("shutdown")
