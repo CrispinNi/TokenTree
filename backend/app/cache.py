@@ -15,8 +15,7 @@ class RedisCache:
         redis_url = os.getenv("REDIS_URL")
 
         if not redis_url:
-            redis_url = "redis://tokentree-redis:6379"
-            print("⚠️ REDIS_URL not set, using internal redis:", redis_url)
+            raise RuntimeError("REDIS_URL environment variable not set")
 
         try:
             self.redis = Redis.from_url(
@@ -25,10 +24,11 @@ class RedisCache:
         )
 
             await self.redis.ping()
+
             print("✅ Redis connected")
 
         except Exception as e:
-            print("⚠️ Redis unavailable:", e)
+            print("❌ Redis connection failed:", e)
             self.redis = None
 
     async def close(self):
