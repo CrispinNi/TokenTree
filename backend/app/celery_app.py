@@ -3,6 +3,8 @@ from celery import Celery
 from celery.schedules import schedule
 from datetime import timedelta
 
+redis_url = os.getenv("REDIS_URL", "redis://tokentree-redis:6379")
+
 # Initialize Celery
 app = Celery(
     'tokentree',

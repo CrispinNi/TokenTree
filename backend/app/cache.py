@@ -10,28 +10,25 @@ class RedisCache:
     def __init__(self):
         self.redis: Optional[Redis] = None
 
-    async def init(self):
-        """Initialize Redis connection safely"""
 
+    async def init(self):
         redis_url = os.getenv("REDIS_URL")
 
         if not redis_url:
-            print("⚠️ REDIS_URL environment variable not set")
-            return
+            redis_url = "redis://tokentree-redis:6379"
+            print("⚠️ REDIS_URL not set, using internal redis:", redis_url)
 
         try:
             self.redis = Redis.from_url(
-                redis_url,
-                decode_responses=True
-            )
+            redis_url,
+            decode_responses=True
+        )
 
-            # test connection
             await self.redis.ping()
-
             print("✅ Redis connected")
 
         except Exception as e:
-            print("⚠️ Redis unavailable, running without cache:", e)
+            print("⚠️ Redis unavailable:", e)
             self.redis = None
 
     async def close(self):
