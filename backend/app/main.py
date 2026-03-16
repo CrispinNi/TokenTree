@@ -489,7 +489,7 @@ async def trending_news():
 @app.get("/api/crypto/price/{symbol}")
 async def get_crypto_price(symbol: str):
     """Get current crypto price from cache or fetch fresh"""
-    price_data = await CryptoService.get_price(symbol.upper())
+    price_data = await CryptoService.get_price(symbol.lower())
     if not price_data:
         raise HTTPException(status_code=404, detail="Crypto not found")
     return price_data
@@ -498,7 +498,7 @@ async def get_crypto_price(symbol: str):
 @app.get("/api/crypto/prices")
 async def get_crypto_prices(symbols: str):
     """Get multiple crypto prices (comma-separated symbols)"""
-    symbol_list = [s.strip().upper() for s in symbols.split(",")]
+    symbol_list = [s.strip().lower() for s in symbols.split(",")]
     return await CryptoService.get_prices_bulk(symbol_list)
 
 
@@ -512,7 +512,7 @@ async def refresh_crypto_prices(symbols: List[str]):
 @app.websocket("/ws/price/{symbol}")
 async def websocket_price_endpoint(websocket: WebSocket, symbol: str):
     """WebSocket endpoint for streaming live crypto prices"""
-    symbol = symbol.upper()
+    symbol = symbol.lower()
     await manager.connect(websocket, symbol)
     
     try:
