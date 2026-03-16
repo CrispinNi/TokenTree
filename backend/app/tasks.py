@@ -43,7 +43,6 @@ def fetch_and_cache_prices(self, symbols: list):
             data = response.json()
 
             for coin_id, coin_data in data.items():
-
                 price_data = {
                     "symbol": coin_id,
                     "price": coin_data.get("usd"),
@@ -53,13 +52,17 @@ def fetch_and_cache_prices(self, symbols: list):
                     "timestamp": datetime.utcnow().isoformat()
                 }
 
+                # Save to Redis cache
                 await cache.set(
-                    f"crypto_price:{coin_id}",
-                   
+                     f"crypto_price:{coin_id}",
+                    price_data,
+                    ttl=300
                 )
 
+                # Publish update to websocket subscribers
                 await cache.publish(
-                    f"price_updates:{coin_id}",
+                     f"price_updates:{coin_id}",
+                    json.dumps(price_data)
                 )
 
                 print(f"Updated {coin_id}: ${price_data['price']}")
