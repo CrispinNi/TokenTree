@@ -18,16 +18,14 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io" # Upstash Redis URL
 
       - key: JWT_SECRET_KEY
         generateValue: true
 
       - key: CRYPTOCOMPARE_API_KEY
         value: "8c9096723d026ce12a372432eb550048dfbd65c32a94191637a5c5249510ee08"
+
   # ===============================
   # React Frontend
   # ===============================
@@ -62,22 +60,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io"
 
       - key: CELERY_BROKER_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io"
 
       - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io"
 
   # ===============================
   # Celery Beat Scheduler
@@ -98,29 +87,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io"
 
       - key: CELERY_BROKER_URL
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
+        value: "https://pleasing-colt-73210.upstash.io"
 
       - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: tokentree-redis
-          property: connectionString
-
-  # ===============================
-  # Redis
-  # ===============================
-  - type: redis
-    name: tokentree-redis
-    plan: free
+        value: "https://pleasing-colt-73210.upstash.io" # Upstash Redis URL
 
 # ===============================
 # PostgreSQL Database
