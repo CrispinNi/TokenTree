@@ -18,7 +18,7 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: "https://pleasing-colt-73210.upstash.io" # Upstash Redis URL
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
       - key: JWT_SECRET_KEY
         generateValue: true
@@ -60,13 +60,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: "https://pleasing-colt-73210.upstash.io"
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_BROKER_URL
-        value: "https://pleasing-colt-73210.upstash.io"
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_RESULT_BACKEND
-        value: "https://pleasing-colt-73210.upstash.io"
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
   # ===============================
   # Celery Beat Scheduler
@@ -87,13 +87,13 @@ services:
           property: connectionString
 
       - key: REDIS_URL
-        value: "https://pleasing-colt-73210.upstash.io"
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_BROKER_URL
-        value: "https://pleasing-colt-73210.upstash.io"
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379
 
       - key: CELERY_RESULT_BACKEND
-        value: "https://pleasing-colt-73210.upstash.io" # Upstash Redis URL
+        value: redis://default:********@pleasing-colt-73210.upstash.io:6379 # Upstash Redis URL
 
 # ===============================
 # PostgreSQL Database
