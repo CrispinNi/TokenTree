@@ -214,14 +214,28 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def on_startup():
-
+    """Initialize DB, Redis, and preload crypto prices."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # Initialize Redis cache
     await cache.init()
     await manager.init_redis()
+    print("✅ Redis cache and WebSocket manager initialized")
 
-    print("Redis cache and WebSocket manager initialized")
+    # Preload popular crypto prices
+    popular_coins = ["btc", "eth", "bnb", "xrp", "ada", "sol", "dot", "matic"]
+    print("🚀 Preloading crypto prices...")
+
+    async def preload():
+        tasks = []
+        for symbol in popular_coins:
+            # Fire-and-forget fetch & cache
+            tasks.append(asyncio.create_task(CryptoService.get_price(symbol)))
+        await asyncio.gather(*tasks)
+
+    # Run preload in the background
+    asyncio.create_task(preload())
 
 @app.on_event("shutdown")
 async def on_shutdown() -> None:

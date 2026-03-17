@@ -22,28 +22,27 @@ SYMBOL_TO_ID = {
 class CryptoService:
 
     @staticmethod
-    async def get_price(symbol: str) -> dict:
-        """Return price from cache or fetch from provider."""
-        symbol = symbol.lower()
-        coin_id = SYMBOL_TO_ID.get(symbol, symbol)
-
-        cached = await cache.get(f"crypto_price:{coin_id}")
-        if cached:
-            return cached
-
-        # Fetch immediately
-        price = await CryptoService.fetch_price(coin_id)
-
-        # Schedule background refresh
-        asyncio.create_task(CryptoService.refresh_price(coin_id))
-
+    async def get_price(coin_id: str) -> dict:
+        coin_id = coin_id.lower()
+        mapped_id = SYMBOL_TO_ID.get(coin_id, coin_id)
+    
+        price = await cache.get(f"crypto_price:{mapped_id}")
         if price:
             return price
-        return {
-            "symbol": coin_id,
+
+        # Cache miss → fetch immediately
+        print(f"Cache miss for {mapped_id}, fetching now...")
+        price = await CryptoService.fetch_price_now(mapped_id)
+
+        # Return a fallback if still None
+        if not price:
+            price = {
+            "symbol": mapped_id,
             "price": 0,
             "error": "Price not available yet (warming cache)"
         }
+
+        return price
 
     @staticmethod
     async def fetch_price(coin_id: str) -> Optional[dict]:
