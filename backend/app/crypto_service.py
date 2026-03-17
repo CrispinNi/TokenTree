@@ -107,45 +107,20 @@ class CryptoService:
     @staticmethod
     async def get_prices_bulk(coin_ids: List[str]) -> dict:
         results = {}
-        # inside get_prices_bulk
 
         for coin_id in coin_ids:
             coin_id = coin_id.lower()
-           
-            
-
-        # Map symbol
             mapped_id = SYMBOL_TO_ID.get(coin_id, coin_id)
 
-        # 1️⃣ Try cache first
+        # ONLY read from cache
             price = await cache.get(f"crypto_price:{mapped_id}")
 
-            if not price:
-                print(f"Cache miss → fetching {mapped_id}")
-
-            # 2️⃣ Try live fetch
-                price = await CryptoService.fetch_price_now(mapped_id)
-
-            # 3️⃣ Fallback → use old cache if exists
-                if not price:
-                    print("Using stale cache fallback...")
-                    price = await cache.get(f"crypto_price:{mapped_id}")
-
-        # 4️⃣ Absolute fallback (NEVER null)
             if not price:
                 price = {
                 "symbol": mapped_id,
                 "price": 0,
-                "error": "temporarily unavailable"
+                "error": "Price not available yet (warming cache)"
             }
-                
-            if price:
-                results[coin_id] = price
-                continue
-
-        # Background refresh
-            from app.tasks import fetch_and_cache_prices
-            fetch_and_cache_prices.delay([mapped_id])
 
             results[coin_id] = price
 

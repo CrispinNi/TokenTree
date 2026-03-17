@@ -40,7 +40,7 @@ if backend_url and backend_url.startswith("rediss://"):
 app.conf.beat_schedule = {
     "fetch-crypto-prices-every-5-min": {
         "task": "app.tasks.fetch_and_cache_prices",
-        "schedule": timedelta(minutes=5),
+        "schedule": timedelta(minutes=10),
         "args": (["bitcoin", "ethereum", "binancecoin", "ripple","solana","matic","cardano","polkadot"],)
     },
 }
