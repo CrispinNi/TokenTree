@@ -9,18 +9,21 @@ class CryptoService:
 
     @staticmethod
     async def get_price(coin_id: str) -> Optional[dict]:
-
         coin_id = coin_id.lower()
-
         price = await cache.get(f"crypto_price:{coin_id}")
 
         if price:
             return price
 
+    # FIX: Fetch immediately instead of just returning None
+        print(f"Cache miss for {coin_id}, fetching now...")
+        price = await CryptoService.fetch_price_now(coin_id)
+    
+    # Still trigger background task for future updates if desired
         from app.tasks import fetch_and_cache_prices
         fetch_and_cache_prices.delay([coin_id])
 
-        return None
+        return price
 
     @staticmethod
     async def fetch_price_now(coin_id: str):
@@ -64,17 +67,18 @@ class CryptoService:
         for coin_id in coin_ids:
             coin_id = coin_id.lower()
 
-        price = await cache.get(f"crypto_price:{coin_id}")
+        # FIX: Move these lines INSIDE the for loop indentation
+            price = await cache.get(f"crypto_price:{coin_id}")
 
-        if not price:
+            if not price:
             # fetch immediately if cache empty
-            price = await CryptoService.fetch_price_now(coin_id)
+                price = await CryptoService.fetch_price_now(coin_id)
 
             # also trigger background refresh
-            from app.tasks import fetch_and_cache_prices
-            fetch_and_cache_prices.delay([coin_id])
+                from app.tasks import fetch_and_cache_prices
+                fetch_and_cache_prices.delay([coin_id])
 
-        results[coin_id] = price
+            results[coin_id] = price
 
         return results
 
