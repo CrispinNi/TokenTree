@@ -41,7 +41,7 @@ app.conf.beat_schedule = {
     "fetch-crypto-prices-every-5-min": {
         "task": "app.tasks.fetch_and_cache_prices",
         "schedule": timedelta(minutes=5),
-        "args": (["BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOT", "MATIC"],)
+        "args": (["bitcoin", "ethereum", "binancecoin", "ripple","solana","matic","cardano","polkadot"],)
     },
 }
 

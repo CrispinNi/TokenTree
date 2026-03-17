@@ -1,8 +1,21 @@
 import httpx
 from typing import Optional, List
 from app.cache import cache
+import asyncio
+from datetime import datetime
 
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3"
+
+SYMBOL_TO_ID = {
+    "btc": "bitcoin",
+    "eth": "ethereum",
+    "bnb": "binancecoin",
+    "xrp": "ripple",
+    "ada": "cardano",
+    "sol": "solana",
+    "dot": "polkadot",
+    "matic": "polygon"
+}
 
 
 class CryptoService:
@@ -25,73 +38,114 @@ class CryptoService:
 
         return price
 
+  
+
     @staticmethod
     async def fetch_price_now(coin_id: str):
+        coin_id = coin_id.lower()
+
+    # Map symbol → CoinGecko ID
+        coin_id = SYMBOL_TO_ID.get(coin_id, coin_id)
+
         url = f"{COINGECKO_API_URL}/simple/price"
 
         params = {
-        "ids": coin_id,
-        "vs_currencies": "usd",
-        "include_market_cap": "true",
-        "include_24hr_vol": "true",
-        "include_24hr_change": "true"
+           "ids": coin_id,
+           "vs_currencies": "usd",
+           "include_market_cap": "true",
+           "include_24hr_vol": "true",
+           "include_24hr_change": "true"
     }
 
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.get(url, params=params)
+        retries = 3
 
-                print("STATUS:", response.status_code)
-                print("RESPONSE:", response.text)  # 👈 VERY IMPORTANT DEBUG
+        for attempt in range(retries):
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    response = await client.get(url, params=params)
 
-            if response.status_code != 200:
-                return None
-     
-            data = response.json()
+                print(f"Attempt {attempt+1}: STATUS {response.status_code}")
 
-        # 🚨 FIX: handle empty response
-            if not data or coin_id not in data:
-                print(f"❌ No data returned for {coin_id}")
-                return None
+            # 🚨 HANDLE RATE LIMIT
+                if response.status_code == 429:
+                    wait_time = 2 ** attempt
+                    print(f"Rate limited. Retrying in {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
 
-            coin_data = data[coin_id]
+                if response.status_code != 200:
+                    return None
 
-            price_data = {
-               "symbol": coin_id,
-               "price": coin_data.get("usd"),
-               "market_cap": coin_data.get("usd_market_cap"),
-               "volume_24h": coin_data.get("usd_24h_vol"),
-               "change_24h": coin_data.get("usd_24h_change"),
-        }
- 
-            await cache.set(f"crypto_price:{coin_id}", price_data, ttl=300)
+                data = response.json()
 
-            print(f"✅ Fetched {coin_id}: {price_data}")
+                if not data or coin_id not in data:
+                    return None
 
-            return price_data
+                coin_data = data[coin_id]
 
-        except Exception as e:
-            print("❌ Fetch error:", e)
-            return None
+                price_data = {
+                "symbol": coin_id,
+                "price": coin_data.get("usd"),
+                "market_cap": coin_data.get("usd_market_cap"),
+                "volume_24h": coin_data.get("usd_24h_vol"),
+                "change_24h": coin_data.get("usd_24h_change"),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
+            # Save to Redis
+                await cache.set(f"crypto_price:{coin_id}", price_data, ttl=300)
+
+                return price_data
+
+            except Exception as e:
+                print("Fetch error:", e)
+                await asyncio.sleep(1)
+
+        return None
     
 
     @staticmethod
     async def get_prices_bulk(coin_ids: List[str]) -> dict:
         results = {}
+        # inside get_prices_bulk
 
         for coin_id in coin_ids:
             coin_id = coin_id.lower()
+           
+            
 
-        # FIX: Move these lines INSIDE the for loop indentation
-            price = await cache.get(f"crypto_price:{coin_id}")
+        # Map symbol
+            mapped_id = SYMBOL_TO_ID.get(coin_id, coin_id)
+
+        # 1️⃣ Try cache first
+            price = await cache.get(f"crypto_price:{mapped_id}")
 
             if not price:
-            # fetch immediately if cache empty
-                price = await CryptoService.fetch_price_now(coin_id)
+                print(f"Cache miss → fetching {mapped_id}")
 
-            # also trigger background refresh
-                from app.tasks import fetch_and_cache_prices
-                fetch_and_cache_prices.delay([coin_id])
+            # 2️⃣ Try live fetch
+                price = await CryptoService.fetch_price_now(mapped_id)
+
+            # 3️⃣ Fallback → use old cache if exists
+                if not price:
+                    print("Using stale cache fallback...")
+                    price = await cache.get(f"crypto_price:{mapped_id}")
+
+        # 4️⃣ Absolute fallback (NEVER null)
+            if not price:
+                price = {
+                "symbol": mapped_id,
+                "price": 0,
+                "error": "temporarily unavailable"
+            }
+                
+            if price:
+                results[coin_id] = price
+                continue
+
+        # Background refresh
+            from app.tasks import fetch_and_cache_prices
+            fetch_and_cache_prices.delay([mapped_id])
 
             results[coin_id] = price
 
