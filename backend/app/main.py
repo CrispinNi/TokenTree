@@ -14,6 +14,7 @@ import httpx
 from sqlalchemy import select
 import asyncio
 import json
+from app.crypto_service import CryptoService
 
 
 # Import new modules for caching and WebSocket
@@ -485,26 +486,23 @@ async def trending_news():
 
 @app.get("/api/crypto/price/{symbol}")
 async def get_crypto_price(symbol: str):
-    """Get current crypto price from cache or fetch fresh"""
-    price_data = await CryptoService.get_price(symbol.lower())
-    if not price_data:
-        raise HTTPException(status_code=404, detail="Crypto not found")
-    return price_data
-
+    price = await CryptoService.get_price(symbol)
+    if not price:
+        raise HTTPException(status_code=404, detail="Price not found")
+    return price
 
 @app.get("/api/crypto/prices")
 async def get_crypto_prices(symbols: str):
     """Get multiple crypto prices (comma-separated symbols)"""
-    symbol_list = [s.strip().lower() for s in symbols.split(",")]
+    symbol_list = [s.strip() for s in symbols.split(",")]
     return await CryptoService.get_prices_bulk(symbol_list)
-
 
 @app.post("/api/crypto/refresh")
 async def refresh_crypto_prices(symbols: List[str]):
-    """Manually trigger background job to update prices"""
-    CryptoService.trigger_price_update(symbols)
-    return {"status": "triggered", "symbols": symbols}
-
+    """Trigger immediate refresh in background"""
+    for s in symbols:
+        asyncio.create_task(CryptoService.refresh_price(s))
+    return {"status": "refresh triggered", "symbols": symbols}
 
 @app.websocket("/ws/price/{symbol}")
 async def websocket_price_endpoint(websocket: WebSocket, symbol: str):

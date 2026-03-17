@@ -1,9 +1,11 @@
 import httpx
+import asyncio
+from datetime import datetime
 from typing import Optional, List
 from app.cache import cache
-from datetime import datetime
 
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3"
+COINCAP_API_URL = "https://api.coincap.io/v2"
 
 SYMBOL_TO_ID = {
     "btc": "bitcoin",
@@ -20,50 +22,120 @@ SYMBOL_TO_ID = {
 class CryptoService:
 
     @staticmethod
-    async def get_price(coin_id: str) -> Optional[dict]:
-        coin_id = coin_id.lower()
-        mapped_id = SYMBOL_TO_ID.get(coin_id, coin_id)
+    async def get_price(symbol: str) -> dict:
+        """Return price from cache or fetch from provider."""
+        symbol = symbol.lower()
+        coin_id = SYMBOL_TO_ID.get(symbol, symbol)
 
-        # 1️⃣ Try cache
-        price = await cache.get(f"crypto_price:{mapped_id}")
+        cached = await cache.get(f"crypto_price:{coin_id}")
+        if cached:
+            return cached
+
+        # Fetch immediately
+        price = await CryptoService.fetch_price(coin_id)
+
+        # Schedule background refresh
+        asyncio.create_task(CryptoService.refresh_price(coin_id))
+
         if price:
             return price
-
-        # 2️⃣ Trigger background fetch
-        from app.tasks import fetch_and_cache_prices
-        fetch_and_cache_prices.delay([mapped_id])
-
-        # 3️⃣ Return fallback response
         return {
-            "symbol": mapped_id,
+            "symbol": coin_id,
             "price": 0,
-            "error": "warming cache"
+            "error": "Price not available yet (warming cache)"
         }
 
     @staticmethod
-    async def get_prices_bulk(coin_ids: List[str]) -> dict:
+    async def fetch_price(coin_id: str) -> Optional[dict]:
+        """Try CoinGecko first, then CoinCap fallback."""
+        providers = [
+            CryptoService._fetch_coingecko,
+            CryptoService._fetch_coincap
+        ]
+        for provider in providers:
+            try:
+                data = await provider(coin_id)
+                if data:
+                    # Save to Redis
+                    await cache.set(f"crypto_price:{coin_id}", data, ttl=300)
+                    return data
+            except Exception as e:
+                print(f"{provider.__name__} failed: {e}")
+        return None
+
+    @staticmethod
+    async def refresh_price(coin_id: str):
+        """Background refresh without blocking response."""
+        await CryptoService.fetch_price(coin_id)
+
+    @staticmethod
+    async def _fetch_coingecko(coin_id: str) -> Optional[dict]:
+        url = f"{COINGECKO_API_URL}/simple/price"
+        params = {
+            "ids": coin_id,
+            "vs_currencies": "usd",
+            "include_market_cap": "true",
+            "include_24hr_vol": "true",
+            "include_24hr_change": "true"
+        }
+        retries = 3
+        for attempt in range(retries):
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(url, params=params)
+            if resp.status_code == 429:
+                await asyncio.sleep(2 ** attempt)
+                continue
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if coin_id not in data:
+                return None
+            coin = data[coin_id]
+            return {
+                "symbol": coin_id,
+                "price": coin.get("usd"),
+                "market_cap": coin.get("usd_market_cap"),
+                "volume_24h": coin.get("usd_24h_vol"),
+                "change_24h": coin.get("usd_24h_change"),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        return None
+
+    @staticmethod
+    async def _fetch_coincap(coin_id: str) -> Optional[dict]:
+        # Map CoinGecko ID → CoinCap ID (rough mapping)
+        COINCAP_MAPPING = {
+            "bitcoin": "bitcoin",
+            "ethereum": "ethereum",
+            "binancecoin": "binance-coin",
+            "ripple": "ripple",
+            "cardano": "cardano",
+            "solana": "solana",
+            "polkadot": "polkadot",
+            "polygon": "matic-network"
+        }
+        coin = COINCAP_MAPPING.get(coin_id, coin_id)
+        url = f"{COINCAP_API_URL}/assets/{coin}"
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url)
+        if resp.status_code != 200:
+            return None
+        data = resp.json().get("data", {})
+        if not data:
+            return None
+        return {
+            "symbol": coin_id,
+            "price": float(data.get("priceUsd", 0)),
+            "market_cap": float(data.get("marketCapUsd", 0)),
+            "volume_24h": float(data.get("volumeUsd24Hr", 0)),
+            "change_24h": float(data.get("changePercent24Hr", 0)),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    @staticmethod
+    async def get_prices_bulk(symbols: List[str]) -> dict:
         results = {}
-        missing = []
-
-        for coin_id in coin_ids:
-            coin_id = coin_id.lower()
-            mapped_id = SYMBOL_TO_ID.get(coin_id, coin_id)
-
-            price = await cache.get(f"crypto_price:{mapped_id}")
-
-            if not price:
-                missing.append(mapped_id)
-                price = {
-                    "symbol": mapped_id,
-                    "price": 0,
-                    "error": "warming cache"
-                }
-
-            results[coin_id] = price
-
-        # 🔥 Trigger background fetch for missing coins
-        if missing:
-            from app.tasks import fetch_and_cache_prices
-            fetch_and_cache_prices.delay(missing)
-
+        for s in symbols:
+            s = s.lower()
+            results[s] = await CryptoService.get_price(s)
         return results
