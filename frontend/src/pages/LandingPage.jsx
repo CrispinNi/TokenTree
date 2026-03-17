@@ -10,7 +10,7 @@ import {
   Globe,
 } from "lucide-react";
 
-const CryptoLandingPage = () => {
+const LandingPage = () => {
   return (
     <div className="min-h-screen bg-[#080a0f] text-white font-sans selection:bg-cyan-500/30">
       {/* Background Glows */}
@@ -183,4 +183,4 @@ const CryptoLandingPage = () => {
   );
 };
 
-export default CryptoLandingPage;
+export default LandingPage;
