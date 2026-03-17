@@ -32,7 +32,7 @@ const CryptoLandingPage = () => {
           </span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+        {/* <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <a href="#" className="hover:text-white transition-colors">
             Home
           </a>
@@ -45,7 +45,7 @@ const CryptoLandingPage = () => {
           <a href="#" className="hover:text-white transition-colors">
             Pricing
           </a>
-        </div>
+        </div> */}
 
         <button className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 px-6 py-2 rounded-full text-sm font-semibold hover:bg-cyan-500 hover:text-white transition-all duration-300">
           Get Started
@@ -110,7 +110,7 @@ const CryptoLandingPage = () => {
             {/* Screen Content (the provided image) */}
             <div className="absolute inset-0 bg-[#080a0f] z-10 flex flex-col p-4 pt-10">
               <img
-                src="/path/to/your/image_0.png" // !!! IMPORTANT: Replace this with the actual path to your image !!!
+                src="/phone.png" // !!! IMPORTANT: Replace this with the actual path to your image !!!
                 alt="CryptoTrack AI Dashboard Mobile View"
                 className="w-full h-full object-cover object-top rounded-t-xl"
               />
