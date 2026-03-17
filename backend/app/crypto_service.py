@@ -35,29 +35,44 @@ class CryptoService:
         "include_market_cap": "true",
         "include_24hr_vol": "true",
         "include_24hr_change": "true"
+    }
+
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url, params=params)
+
+                print("STATUS:", response.status_code)
+                print("RESPONSE:", response.text)  # 👈 VERY IMPORTANT DEBUG
+
+            if response.status_code != 200:
+                return None
+     
+            data = response.json()
+
+        # 🚨 FIX: handle empty response
+            if not data or coin_id not in data:
+                print(f"❌ No data returned for {coin_id}")
+                return None
+
+            coin_data = data[coin_id]
+
+            price_data = {
+               "symbol": coin_id,
+               "price": coin_data.get("usd"),
+               "market_cap": coin_data.get("usd_market_cap"),
+               "volume_24h": coin_data.get("usd_24h_vol"),
+               "change_24h": coin_data.get("usd_24h_change"),
         }
+ 
+            await cache.set(f"crypto_price:{coin_id}", price_data, ttl=300)
 
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(url, params=params)
+            print(f"✅ Fetched {coin_id}: {price_data}")
 
-        data = response.json()
+            return price_data
 
-        if coin_id not in data:
+        except Exception as e:
+            print("❌ Fetch error:", e)
             return None
-
-        coin_data = data[coin_id]
-
-        price_data = {
-        "symbol": coin_id,
-        "price": coin_data.get("usd"),
-        "market_cap": coin_data.get("usd_market_cap"),
-        "volume_24h": coin_data.get("usd_24h_vol"),
-        "change_24h": coin_data.get("usd_24h_change"),
-        }
-
-        await cache.set(f"crypto_price:{coin_id}", price_data, ttl=300)
-
-        return price_data
     
 
     @staticmethod
