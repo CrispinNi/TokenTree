@@ -10,6 +10,7 @@ import {
   Globe,
   Mobile, // Assuming you might have a mobile icon or can import one. Otherwise use an icon that fits.
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const LandingPage = () => {
   return (
@@ -44,9 +45,12 @@ const LandingPage = () => {
           </a>
         </div> */}
 
-        <button className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 px-6 py-2 rounded-full text-sm font-semibold hover:bg-cyan-500 hover:text-white transition-all duration-300">
+        <Link
+          to="/login"
+          className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 px-6 py-2 rounded-full text-sm font-semibold hover:bg-cyan-500 hover:text-white transition-all duration-300"
+        >
           Get Started
-        </button>
+        </Link>
       </nav>
 
       {/* Hero Section */}
@@ -63,12 +67,12 @@ const LandingPage = () => {
           one intuitive dashboard. Real-time updates, security-first approach.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="w-full sm:w-auto px-8 py-4 bg-cyan-500 rounded-xl font-bold text-black hover:bg-cyan-400 hover:scale-105 transition-all shadow-xl shadow-cyan-500/20">
+          <Link
+            to="/register"
+            className="w-full sm:w-auto px-8 py-4 bg-cyan-500 rounded-xl font-bold text-black hover:bg-cyan-400 hover:scale-105 transition-all shadow-xl shadow-cyan-500/20"
+          >
             Sign Up Free
-          </button>
-          <button className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 rounded-xl font-bold hover:bg-white/10 transition-all">
-            Watch Demo
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -86,7 +90,7 @@ const LandingPage = () => {
           </div>
           <p className="text-gray-300 text-lg leading-relaxed mb-6">
             Say goodbye to managing multiple spreadsheets and disparate wallet
-            apps. CRYPTOTRACK AI aggregates all your holding into one clear,
+            apps. TOKENTREE aggregates all your holding into one clear,
             real-time dashboard.
           </p>
           <ul className="text-gray-400 space-y-4 list-disc list-inside">
@@ -195,7 +199,7 @@ const LandingPage = () => {
       {/* Footer / Final CTA (background-removed) */}
       <footer className="px-6 py-12 max-w-7xl mx-auto border-t border-white/5 bg-transparent flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="text-gray-500 text-sm">
-          © 2026 CRYPTOTRACK AI. All rights reserved.
+          © 2025 TOKENTREE. All rights reserved.
         </div>
         <div className="flex gap-6 text-gray-400 text-sm">
           <a href="#" className="hover:text-white transition-colors">
