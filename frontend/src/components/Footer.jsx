@@ -6,7 +6,7 @@ export default function Footer() {
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-700/80 bg-slate-900 sm:h-9 sm:w-9">
             <img
-              src="/image.png"
+              src="/token.png"
               alt="Crispin portrait"
               className="h-full w-full object-cover"
             />
